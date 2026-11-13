@@ -10,7 +10,7 @@ android {
         applicationId "com.virtualfmc.fmc737"
         minSdk 19
         targetSdk 34
-        versionCode 4
+        versionCode 5
         versionName "0.4.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -23,6 +23,8 @@ android {
         }
         debug {
             minifyEnabled false
+            // Install the test build beside the author's signed app.
+            applicationIdSuffix ".smallfont"
         }
     }
 
