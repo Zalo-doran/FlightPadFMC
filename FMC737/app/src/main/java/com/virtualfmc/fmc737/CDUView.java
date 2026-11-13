@@ -208,6 +208,10 @@ public class CDUView extends View {
 
     private final char[][] symbols = new char[CDU_ROWS][CDU_COLS];
     private final int[][] colors = new int[CDU_ROWS][CDU_COLS];
+    private final int[][] flags = new int[CDU_ROWS][CDU_COLS];
+    private static final int CDU_FLAG_SMALL_FONT = 0x01;
+    private static final float FONT_SCALE_NORMAL = 0.85f;
+    private static final float FONT_SCALE_SMALL  = 0.65f;
 
     private Bitmap skin;
 
@@ -330,6 +334,7 @@ public class CDUView extends View {
             for (int c = 0; c < CDU_COLS; c++) {
                 symbols[r][c] = ' ';
                 colors[r][c]  = Color.WHITE;
+                flags[r][c]   = 0;
             }
         }
 
@@ -624,10 +629,11 @@ public class CDUView extends View {
         anim.start();
     }
 
-    public void updateScreen(char[][] syms, int[][] cols) {
+    public void updateScreen(char[][] syms, int[][] cols, int[][] fmts) {
         for (int r = 0; r < CDU_ROWS; r++) {
             System.arraycopy(syms[r], 0, symbols[r], 0, CDU_COLS);
             System.arraycopy(cols[r], 0, colors[r], 0, CDU_COLS);
+            System.arraycopy(fmts[r], 0, flags[r], 0, CDU_COLS);
         }
         postInvalidate();
     }
@@ -664,7 +670,7 @@ public class CDUView extends View {
         cellW = actualScreen.width() / CDU_COLS;
         cellH = actualScreen.height() / CDU_ROWS;
 
-        textPaint.setTextSize(cellH * 0.75f);
+        textPaint.setTextSize(cellH * FONT_SCALE_NORMAL);
         textYOffset = cellH * 0.8f;
     }
 
@@ -931,6 +937,8 @@ public class CDUView extends View {
             for (int c = 0; c < CDU_COLS; c++) {
                 if (symbols[r][c] != ' ') {
                     textPaint.setColor(colors[r][c]);
+                    boolean small = (flags[r][c] & CDU_FLAG_SMALL_FONT) != 0;
+                    textPaint.setTextSize(cellH * (small ? FONT_SCALE_SMALL : FONT_SCALE_NORMAL));
                     canvas.drawText(symbols[r], c, 1,
                                     actualScreen.left + c * cellW + cellW * 0.5f,
                                     rowY, textPaint);
