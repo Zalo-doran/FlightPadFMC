@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">FlightPadFMC</string>
+    <string name="app_name">PMDG737</string>
     <string name="status_connecting">Connecting…</string>
     <string name="status_connected">Connected - PMDG 777</string>
     <string name="status_disconnected">Disconnected - reconnecting…</string>
