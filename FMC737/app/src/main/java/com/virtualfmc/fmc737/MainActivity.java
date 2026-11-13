@@ -91,6 +91,8 @@ public class MainActivity extends Activity {
     private static final int CDU_COLS = 24;
     private final char[][] screenSymbols = new char[CDU_ROWS][CDU_COLS];
     private final int[][]  screenColors  = new int[CDU_ROWS][CDU_COLS];
+    // PMDG CDU per-character flags (WebSocket cell.f). Bit 0 marks small text.
+    private final int[][]  screenFlags   = new int[CDU_ROWS][CDU_COLS];
 
     // Which CDU this tablet is viewing (v0.4.1 Captain↔FO swipe).
     // The server defaults to "capt" on identify; defaultCduSide (settings,
@@ -317,8 +319,9 @@ public class MainActivity extends Activity {
             for (int c = 0; c < CDU_COLS; c++) {
                 screenSymbols[r][c] = ' ';
                 screenColors[r][c]  = Color.WHITE;
+                screenFlags[r][c]   = 0;
             }
-        cduView.updateScreen(screenSymbols, screenColors);
+        cduView.updateScreen(screenSymbols, screenColors, screenFlags);
     }
 
     private void initializeDiscoveryListener() {
@@ -633,6 +636,7 @@ public class MainActivity extends Activity {
                     String s = cell.getString("s");
                     screenSymbols[r][c] = s.length() > 0 ? s.charAt(0) : ' ';
                     screenColors[r][c]  = getCduColor(cell.getInt("c"));
+                    screenFlags[r][c]   = cell.optInt("f", 0); // Backward compatible.
                 }
             }
             mainHandler.post(new Runnable() {
@@ -640,7 +644,7 @@ public class MainActivity extends Activity {
                 public void run() {
                     if (cduView != null) {
                         cduView.setConnectionStatus(null);   // clear overlay — live data takes over
-                        cduView.updateScreen(screenSymbols, screenColors);
+                        cduView.updateScreen(screenSymbols, screenColors, screenFlags);
                     }
                 }
             });
