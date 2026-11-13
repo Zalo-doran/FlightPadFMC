@@ -21,14 +21,22 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      # GitHub's ubuntu runner already has the Android command-line tools.
+      # android-actions/setup-android@v3 currently invokes "sdkmanager tools",
+      # which fails because the obsolete "tools" package is no longer listed.
+      - name: Locate preinstalled Android SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager -print
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)"
+          test -n "$SDKMANAGER"
+          echo "SDKMANAGER=$SDKMANAGER" >> "$GITHUB_ENV"
       - name: Set up Gradle 7.6.4
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '7.6.4' # Compatible with Android Gradle Plugin 7.4.2
       - name: Install Android platform
-        run: sdkmanager 'platforms;android-34' 'build-tools;34.0.0'
+        run: '"$SDKMANAGER" "platforms;android-34" "build-tools;34.0.0"'
       - name: Build installable debug APK
         working-directory: FMC737
         run: gradle :app:assembleDebug --no-daemon --stacktrace
