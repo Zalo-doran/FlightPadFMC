@@ -1,0 +1,56 @@
+name: Build PMDG 737 Small-Font APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'FMC737/**'
+      - '.github/workflows/737-smallfont-apk.yml'
+
+permissions:
+  contents: write # Publish a directly downloadable GitHub Release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Set up Gradle 7.6.4
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '7.6.4' # Compatible with Android Gradle Plugin 7.4.2
+      - name: Install Android platform
+        run: sdkmanager 'platforms;android-34' 'build-tools;34.0.0'
+      - name: Build installable debug APK
+        working-directory: FMC737
+        run: gradle :app:assembleDebug --no-daemon --stacktrace
+      - name: Name APK for direct download
+        run: cp FMC737/app/build/outputs/apk/debug/737PMDG.apk FlightPadFMC-737-SmallFont-85-65-debug.apk
+      - name: Upload APK as GitHub Actions artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FlightPadFMC-737-SmallFont-85-65-debug
+          path: FlightPadFMC-737-SmallFont-85-65-debug.apk
+          if-no-files-found: error
+      - name: Publish APK to GitHub Releases
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=smallfont-v0.4.1-r1
+          APK=FlightPadFMC-737-SmallFont-85-65-debug.apk
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$APK" --clobber
+          else
+            gh release create "$TAG" "$APK" \
+              --title 'FlightPadFMC 737 SmallFont 85/65 - Test APK' \
+              --notes 'Test build for PMDG 737 CDU: normal font 85%, small font 65%. Android debug APK, separate application ID com.virtualfmc.fmc737.smallfont. Not yet tested on device.'
+          fi
